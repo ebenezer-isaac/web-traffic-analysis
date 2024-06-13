@@ -93,7 +93,7 @@ try {
     $user_os = getOS();
     $user_browser = getBrowser();
     $cname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
-    $json = file_get_contents("http://ip-api.com/json/$ip");
+    $json = file_get_contents("http://ip-api.com/json");
     $json = json_decode($json, true);
     $ip = $json['query'];
     $country = $json['country'];
@@ -123,7 +123,6 @@ try {
         . "'" . mysqli_real_escape_string($conn, $user_os). "');";
     $conn->query($sql);
     $conn->close();
-    echo "$ip hello";
 } catch (Exception $e) {
 }
 ?>
