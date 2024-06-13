@@ -2,6 +2,8 @@
 $username = "u117204720_analytics";
 $password = "ex46Z>n?";
 $dbname = "u117204720_analytics";
+$page = "Analytics";
+include "logger.php";
 $conn = new mysqli($servername, $username, $password, $dbname);
 $total = 0;
 $google = 0;
@@ -41,7 +43,7 @@ for ($i = 1; $i <= 12; $i++) {
 <html class="no-js" lang="en">
 
 <head>
-    <link href="https://www.ebenezer-isaac.com/img/logo.png" rel="shortcut icon">
+    <link href="https://www.mycrolinks.com/images/hi_logo.png" rel="shortcut icon">
     <meta content="Ebenezer Isaac" name="author">
     <meta content="Web Traffic Analytics" name="description">
     <meta
@@ -255,7 +257,9 @@ for ($i = 1; $i <= 12; $i++) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php $sql = "SELECT `date_time`, `page`, `hostname`, `ip`, `isp`, `city`, `region`, `country`, `zip`, `browser`, `os` FROM track_log where month(`date_time`)=4;";
+                                    <?php 
+                                    $currentDate = date("Y-m-d");
+                                    $sql = "SELECT `date_time`, `page`, `hostname`, `ip`, `isp`, `city`, `region`, `country`, `zip`, `browser`, `os` FROM track_log WHERE DATE(`date_time`) = '$currentDate';";
                                     $result = $conn->query($sql);
                                     if ($result->num_rows > 0) {
                                         while ($row = $result->fetch_assoc()) {
@@ -281,7 +285,7 @@ for ($i = 1; $i <= 12; $i++) {
     <script src="js/datatables-init.js"></script>
     <script src="js/Chart.bundle.min.js"></script>
     <script src="js/dashboard.js"></script>
-    <script>var map_data = {}; var countries = []; var keys = [];<?php $count = 0;
+    <script>var map_data = {}; var countries = []; var keys = []; <?php $count = 0;
     $sql = "SELECT country, count(`user_count`) as cunt from `track_log` where LENGTH(country) >1 GROUP by `country` ORDER BY cunt DESC";
     $result = $conn->query($sql);
     if ($result->num_rows > 0) {
@@ -303,6 +307,13 @@ for ($i = 1; $i <= 12; $i++) {
         }
         $text = $text . $data[count($data) - 1] . "]";
         return $text;
-    } ?> console.log(map_data);var active_month = <?php echo print_data($active_month); ?>;var passive_month = <?php echo print_data($passive_month); ?>;var total_month = <?php echo print_data($total_month); ?>;var google = <?php echo round(($google / $total) * 100, 2); ?>;var amazon = <?php echo round(($amazon / $total) * 100, 2); ?>;var bing = <?php echo round(($bing / $total) * 100, 2); ?>;var active = <?php echo round(($active / $total) * 100, 2);
-                                       $page = "Analytics";
-                                       include "logger.php"; ?>;function set_data(){try{jQuery("#vmap").vectorMap({map:"world_en",backgroundColor:null,color:"#ffffff",hoverOpacity:.7,selectedColor:"#1de9b6",enableZoom:!0,showTooltip:!0,values:map_data,scaleColors:["#1de9b6","#03a9f5"],normalizeFunction:"polynomial"})}catch(e){}try{(e=document.getElementById("sales-chart")).height=150;new Chart(e,{type:"line",data:{labels:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],type:"line",defaultFontFamily:"Montserrat",datasets:[{label:"Active",data:active_month,backgroundColor:"transparent",borderColor:"rgba(220,53,69,0.75)",borderWidth:3,pointStyle:"circle",pointRadius:5,pointBorderColor:"transparent",pointBackgroundColor:"rgba(220,53,69,0.75)"},{label:"Passive",data:passive_month,backgroundColor:"transparent",borderColor:"rgba(40,167,69,0.75)",borderWidth:3,pointStyle:"circle",pointRadius:5,pointBorderColor:"transparent",pointBackgroundColor:"rgba(40,167,69,0.75)"}]},options:{responsive:!0,tooltips:{mode:"index",titleFontSize:12,titleFontColor:"#000",bodyFontColor:"#000",backgroundColor:"#fff",titleFontFamily:"Montserrat",bodyFontFamily:"Montserrat",cornerRadius:3,intersect:!1},legend:{display:!1,labels:{usePointStyle:!0,fontFamily:"Montserrat"}},scales:{xAxes:[{display:!0,gridLines:{display:!1,drawBorder:!1},scaleLabel:{display:!1,labelString:"Month"}}],yAxes:[{display:!0,gridLines:{display:!1,drawBorder:!1},scaleLabel:{display:!0,labelString:"Page Requests"}}]},title:{display:!1,text:"Normal Legend"}}})}catch(e){}try{(e=document.getElementById("team-chart")).height=150;new Chart(e,{type:"line",data:{labels:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],type:"line",defaultFontFamily:"Montserrat",datasets:[{data:total_month,label:"Traffic Requests ",backgroundColor:"rgba(0,103,255,.15)",borderColor:"rgba(0,103,255,0.5)",borderWidth:3.5,pointStyle:"circle",pointRadius:5,pointBorderColor:"transparent",pointBackgroundColor:"rgba(0,103,255,0.5)"}]},options:{responsive:!0,tooltips:{mode:"index",titleFontSize:12,titleFontColor:"#000",bodyFontColor:"#000",backgroundColor:"#fff",titleFontFamily:"Montserrat",bodyFontFamily:"Montserrat",cornerRadius:3,intersect:!1},legend:{display:!1,position:"top",labels:{usePointStyle:!0,fontFamily:"Montserrat"}},scales:{xAxes:[{display:!0,gridLines:{display:!1,drawBorder:!1},scaleLabel:{display:!1,labelString:"Month"}}],yAxes:[{display:!0,gridLines:{display:!1,drawBorder:!1},scaleLabel:{display:!0,labelString:"Page Requests"}}]},title:{display:!1}}})}catch(e){}try{(e=document.getElementById("singelBarChart")).height=150;new Chart(e,{type:"bar",data:{labels:keys,datasets:[{label:"Page Requests",data:countries,borderColor:"rgba(0, 123, 255, 0.9)",borderWidth:"0",backgroundColor:"rgba(0, 123, 255, 0.5)"}]},options:{scales:{yAxes:[{ticks:{beginAtZero:!0}}]}}})}catch(e){}try{var e;(e=document.getElementById("pieChart")).height=150;new Chart(e,{type:"pie",data:{datasets:[{data:[google,amazon,bing,active],backgroundColor:["#E04E5C","#FFCA2C","#48B461","#268FFF"],hoverBackgroundColor:["#E04E5C","#FFCA2C","#48B461","#268FFF"]}],labels:["Google","Amazon","Bing","Users"]},options:{responsive:!0}})}catch(e){}}jQuery(document).ready(function(e){set_data(),e("#bootstrap-data-table").DataTable()});</script></body></html>
+    } ?> 
+    console.log(map_data);var active_month = <?php echo print_data($active_month); ?>;
+    var passive_month = <?php echo print_data($passive_month); ?>;
+    var total_month = <?php echo print_data($total_month); ?>;
+    var google = <?php echo round(($google / $total) * 100, 2); ?>;
+    var amazon = <?php echo round(($amazon / $total) * 100, 2); ?>;
+    var bing = <?php echo round(($bing / $total) * 100, 2); ?>;var active = <?php echo round(($active / $total) * 100, 2);
+            
+            ?>
+                                       ;function set_data(){try{jQuery("#vmap").vectorMap({map:"world_en",backgroundColor:null,color:"#ffffff",hoverOpacity:.7,selectedColor:"#1de9b6",enableZoom:!0,showTooltip:!0,values:map_data,scaleColors:["#1de9b6","#03a9f5"],normalizeFunction:"polynomial"})}catch(e){}try{(e=document.getElementById("sales-chart")).height=150;new Chart(e,{type:"line",data:{labels:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],type:"line",defaultFontFamily:"Montserrat",datasets:[{label:"Active",data:active_month,backgroundColor:"transparent",borderColor:"rgba(220,53,69,0.75)",borderWidth:3,pointStyle:"circle",pointRadius:5,pointBorderColor:"transparent",pointBackgroundColor:"rgba(220,53,69,0.75)"},{label:"Passive",data:passive_month,backgroundColor:"transparent",borderColor:"rgba(40,167,69,0.75)",borderWidth:3,pointStyle:"circle",pointRadius:5,pointBorderColor:"transparent",pointBackgroundColor:"rgba(40,167,69,0.75)"}]},options:{responsive:!0,tooltips:{mode:"index",titleFontSize:12,titleFontColor:"#000",bodyFontColor:"#000",backgroundColor:"#fff",titleFontFamily:"Montserrat",bodyFontFamily:"Montserrat",cornerRadius:3,intersect:!1},legend:{display:!1,labels:{usePointStyle:!0,fontFamily:"Montserrat"}},scales:{xAxes:[{display:!0,gridLines:{display:!1,drawBorder:!1},scaleLabel:{display:!1,labelString:"Month"}}],yAxes:[{display:!0,gridLines:{display:!1,drawBorder:!1},scaleLabel:{display:!0,labelString:"Page Requests"}}]},title:{display:!1,text:"Normal Legend"}}})}catch(e){}try{(e=document.getElementById("team-chart")).height=150;new Chart(e,{type:"line",data:{labels:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],type:"line",defaultFontFamily:"Montserrat",datasets:[{data:total_month,label:"Traffic Requests ",backgroundColor:"rgba(0,103,255,.15)",borderColor:"rgba(0,103,255,0.5)",borderWidth:3.5,pointStyle:"circle",pointRadius:5,pointBorderColor:"transparent",pointBackgroundColor:"rgba(0,103,255,0.5)"}]},options:{responsive:!0,tooltips:{mode:"index",titleFontSize:12,titleFontColor:"#000",bodyFontColor:"#000",backgroundColor:"#fff",titleFontFamily:"Montserrat",bodyFontFamily:"Montserrat",cornerRadius:3,intersect:!1},legend:{display:!1,position:"top",labels:{usePointStyle:!0,fontFamily:"Montserrat"}},scales:{xAxes:[{display:!0,gridLines:{display:!1,drawBorder:!1},scaleLabel:{display:!1,labelString:"Month"}}],yAxes:[{display:!0,gridLines:{display:!1,drawBorder:!1},scaleLabel:{display:!0,labelString:"Page Requests"}}]},title:{display:!1}}})}catch(e){}try{(e=document.getElementById("singelBarChart")).height=150;new Chart(e,{type:"bar",data:{labels:keys,datasets:[{label:"Page Requests",data:countries,borderColor:"rgba(0, 123, 255, 0.9)",borderWidth:"0",backgroundColor:"rgba(0, 123, 255, 0.5)"}]},options:{scales:{yAxes:[{ticks:{beginAtZero:!0}}]}}})}catch(e){}try{var e;(e=document.getElementById("pieChart")).height=150;new Chart(e,{type:"pie",data:{datasets:[{data:[google,amazon,bing,active],backgroundColor:["#E04E5C","#FFCA2C","#48B461","#268FFF"],hoverBackgroundColor:["#E04E5C","#FFCA2C","#48B461","#268FFF"]}],labels:["Google","Amazon","Bing","Users"]},options:{responsive:!0}})}catch(e){}}jQuery(document).ready(function(e){set_data(),e("#bootstrap-data-table").DataTable()});</script></body></html>
