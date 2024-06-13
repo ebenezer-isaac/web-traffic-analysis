@@ -50,7 +50,7 @@ for ($i = 1; $i <= 12; $i++) {
     <meta content="Web Traffic Analytics" property="og:title">
     <meta content="Click To Know More" property="og:site_name">
     <meta content="https://demo.mycrolinks.com/web-traffic-analysis/" property="og:url">
-    <meta content="ebenenezer.com" property="og:description">
+    <meta content="Graphical Representation" property="og:description">
     <meta content="https://www.mycrolinks.com/images/hi_logo.png" property="og:image">
     <meta content="2000" property="og:image:width">
     <meta content="2000" property="og:image:height">
