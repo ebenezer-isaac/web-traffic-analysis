@@ -64,7 +64,7 @@ function ip_get($allow_private = false)
 {
     $proxy_ip = ['127.0.0.1'];
     $header = 'HTTP_X_FORWARDED_FOR';
-    echo 'IP Check:'. ip_check($_SERVER['REMOTE_ADDR'], $allow_private, $proxy_ip);
+    //echo 'IP Check:'. ip_check($_SERVER['REMOTE_ADDR'], $allow_private, $proxy_ip).;
     if (ip_check($_SERVER['REMOTE_ADDR'], $allow_private, $proxy_ip))
         return $_SERVER['REMOTE_ADDR'];
     if (isset($_SERVER[$header])) {
@@ -73,7 +73,7 @@ function ip_get($allow_private = false)
             if (ip_check($ip, $allow_private, $proxy_ip))
                 return $ip;
     }
-    return null;
+    return $_SERVER['REMOTE_ADDR'];
 }
 
 function ip_check($ip, $allow_private = false, $proxy_ip = [])
@@ -93,11 +93,10 @@ try {
     $user_os = getOS();
     $user_browser = getBrowser();
     $cname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
-    echo 'Hostname:'.$_SERVER['REMOTE_ADDR'].'<br>';
-    echo "HTTP_X_FORWARDED_FOR: ".$_SERVER['HTTP_X_FORWARDED_FOR']."<br>";
+    // echo 'Hostname:'.$_SERVER['REMOTE_ADDR'].'<br>';
+    // echo "HTTP_X_FORWARDED_FOR: ".$_SERVER['HTTP_X_FORWARDED_FOR']."<br>";
     $ip = ip_get();
-    echo 'IP:';
-    echo $ip;
+    // echo 'IP:' . $ip;
     $json = file_get_contents("http://ip-api.com/json/$ip");
     $json = json_decode($json, true);
     $ip = $json['query'];
@@ -110,24 +109,24 @@ try {
     $username = "u117204720_analytics";
     $password = "ex46Z>n?";
     $dbname = "u117204720_analytics";
-    // $conn = new mysqli($servername, $username, $password, $dbname);
-    // if ($conn->connect_error) {
-    //     die("Connection failed: " . $conn->connect_error);
-    // }
-    // $sql = "INSERT INTO track_log (user_count, date_time, page, hostname, ip, isp, city, region, country, zip, browser, os) VALUES (null,"
-    //     . "'" . mysqli_real_escape_string($conn, date('Y-m-d H:i:s')) . "', "
-    //     . "'" . mysqli_real_escape_string($conn, $page) . "', "
-    //     . "'" . mysqli_real_escape_string($conn, $cname) . "', "
-    //     . "'" . mysqli_real_escape_string($conn, $ip) . "', "
-    //     . "'" . mysqli_real_escape_string($conn, $isp) . "', "
-    //     . "'" . mysqli_real_escape_string($conn, $city) . "', "
-    //     . "'" . mysqli_real_escape_string($conn, $region) . "', "
-    //     . "'" . mysqli_real_escape_string($conn, $country) . "', "
-    //     . "'" . mysqli_real_escape_string($conn, $zip) . "', "
-    //     . "'" . mysqli_real_escape_string($conn, $user_browser) . "', "
-    //     . "'" . mysqli_real_escape_string($conn, $user_os). "');";
-    // $conn->query($sql);
-    // $conn->close();
+    $conn = new mysqli($servername, $username, $password, $dbname);
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+    $sql = "INSERT INTO track_log (user_count, date_time, page, hostname, ip, isp, city, region, country, zip, browser, os) VALUES (null,"
+        . "'" . mysqli_real_escape_string($conn, date('Y-m-d H:i:s')) . "', "
+        . "'" . mysqli_real_escape_string($conn, $page) . "', "
+        . "'" . mysqli_real_escape_string($conn, $cname) . "', "
+        . "'" . mysqli_real_escape_string($conn, $ip) . "', "
+        . "'" . mysqli_real_escape_string($conn, $isp) . "', "
+        . "'" . mysqli_real_escape_string($conn, $city) . "', "
+        . "'" . mysqli_real_escape_string($conn, $region) . "', "
+        . "'" . mysqli_real_escape_string($conn, $country) . "', "
+        . "'" . mysqli_real_escape_string($conn, $zip) . "', "
+        . "'" . mysqli_real_escape_string($conn, $user_browser) . "', "
+        . "'" . mysqli_real_escape_string($conn, $user_os). "');";
+    $conn->query($sql);
+    $conn->close();
 } catch (Exception $e) {
 }
 ?>
