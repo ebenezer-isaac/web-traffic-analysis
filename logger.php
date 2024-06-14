@@ -1,5 +1,5 @@
 <?php
-$page = "Logger";
+
 $user_agent = $_SERVER['HTTP_USER_AGENT'];
 date_default_timezone_set('Asia/Kolkata');
 
