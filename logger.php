@@ -96,6 +96,7 @@ try {
     $user_os = getOS();
     $user_browser = getBrowser();
     $cname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
+    echo 'CName: '.$cname.'<br>';
     echo 'Hostname: '.$_SERVER['REMOTE_ADDR'].'<br>';
     echo "HTTP_X_FORWARDED_FOR: ".$_SERVER['HTTP_X_FORWARDED_FOR']."<br>";
     $ip = ip_get();
