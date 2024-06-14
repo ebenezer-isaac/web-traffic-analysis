@@ -64,8 +64,8 @@ function ip_get($allow_private = false)
 {
     $proxy_ip = ['127.0.0.1'];
     $header = 'HTTP_X_FORWARDED_FOR';
-    
-    
+
+
     if (isset($_SERVER[$header])) {
 
         $chain = array_reverse(preg_split('/\s*,\s*/', $_SERVER[$header]));
@@ -73,7 +73,7 @@ function ip_get($allow_private = false)
             if (ip_check($ip, $allow_private, $proxy_ip))
                 return $ip;
     }
-    echo 'IP Check: '. ip_check($_SERVER['REMOTE_ADDR'], $allow_private, $proxy_ip).'<br>';
+    echo 'IP Check: ' . ip_check($_SERVER['REMOTE_ADDR'], $allow_private, $proxy_ip) . '<br>';
     if (ip_check($_SERVER['REMOTE_ADDR'], $allow_private, $proxy_ip))
         return $_SERVER['REMOTE_ADDR'];
     return $_SERVER['REMOTE_ADDR'];
@@ -96,11 +96,28 @@ try {
     $user_os = getOS();
     $user_browser = getBrowser();
     $cname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
-    echo 'CName: '.$cname.'<br>';
-    echo 'Hostname: '.$_SERVER['REMOTE_ADDR'].'<br>';
-    echo "HTTP_X_FORWARDED_FOR: ".$_SERVER['HTTP_X_FORWARDED_FOR']."<br>";
+    echo 'DNS_GET_RECORD';
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $records = dns_get_record($ip, DNS_PTR);
+    if ($records !== false) {
+        $hostname = $records[0]['target'];
+        echo 'Hostname: ' . $hostname . '<br>';
+    } else {
+        echo 'Hostname not found for IP: ' . $ip . '<br>';
+    }
+    echo 'CHECKDNSRR';
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $hostname = gethostbyaddr($ip);
+    if (checkdnsrr($hostname, 'A')) {
+        echo 'Hostname: ' . $hostname . '<br>';
+    } else {
+        echo 'Hostname not found for IP: ' . $ip . '<br>';
+    }
+    echo 'CName: ' . $cname . '<br>';
+    echo 'Hostname: ' . $_SERVER['REMOTE_ADDR'] . '<br>';
+    echo "HTTP_X_FORWARDED_FOR: " . $_SERVER['HTTP_X_FORWARDED_FOR'] . "<br>";
     $ip = ip_get();
-    echo 'IP: '.$ip;
+    echo 'IP: ' . $ip;
     $json = file_get_contents("http://ip-api.com/json/$ip");
     $json = json_decode($json, true);
     $ip = $json['query'];
