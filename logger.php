@@ -60,14 +60,42 @@ function getBrowser()
             $browser = $value;
     return $browser;
 }
+function ip_get($allow_private = false)
+{
+    $proxy_ip = ['127.0.0.1'];
+    $header = 'HTTP_X_FORWARDED_FOR';
+    echo 'IP Check:'. ip_check($_SERVER['REMOTE_ADDR'], $allow_private, $proxy_ip);
+    if (ip_check($_SERVER['REMOTE_ADDR'], $allow_private, $proxy_ip))
+        return $_SERVER['REMOTE_ADDR'];
+    if (isset($_SERVER[$header])) {
+        $chain = array_reverse(preg_split('/\s*,\s*/', $_SERVER[$header]));
+        foreach ($chain as $ip)
+            if (ip_check($ip, $allow_private, $proxy_ip))
+                return $ip;
+    }
+    return null;
+}
 
-$ip = $_SERVER['REMOTE_ADDR'];
+function ip_check($ip, $allow_private = false, $proxy_ip = [])
+{
+    if (!is_string($ip) || is_array($proxy_ip) && in_array($ip, $proxy_ip))
+        return false;
+    $filter_flag = FILTER_FLAG_NO_RES_RANGE;
+    if (!$allow_private) {
+        if (preg_match('/^127\.$/', $ip))
+            return false;
+        $filter_flag |= FILTER_FLAG_NO_PRIV_RANGE;
+    }
+    return filter_var($ip, FILTER_VALIDATE_IP, $filter_flag) !== false;
+}
 
 try {
     $user_os = getOS();
     $user_browser = getBrowser();
     $cname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
-    //$ip = ip_get();
+    echo 'Hostname:'.$_SERVER['REMOTE_ADDR'].'<br>';
+    echo "HTTP_X_FORWARDED_FOR: ".$_SERVER['HTTP_X_FORWARDED_FOR']."<br>";
+    $ip = ip_get();
     echo 'IP:';
     echo $ip;
     $json = file_get_contents("http://ip-api.com/json/$ip");
