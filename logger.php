@@ -95,24 +95,21 @@ function ip_check($ip, $allow_private = false, $proxy_ip = [])
 try {
     $user_os = getOS();
     $user_browser = getBrowser();
-    $cname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
-    echo 'DNS_GET_RECORD';
+    $cname = null;
+
+    // Get CName using DNS records
     $ip = $_SERVER['REMOTE_ADDR'];
     $records = dns_get_record($ip, DNS_PTR);
     if ($records !== false) {
-        $hostname = $records[0]['target'];
-        echo 'Hostname: ' . $hostname . '<br>';
+        $cname = $records[0]['target'];
     } else {
-        echo 'Hostname not found for IP: ' . $ip . '<br>';
+        // Get CName using gethostbyaddr
+        $hostname = gethostbyaddr($ip);
+        if ($hostname !== $ip) {
+            $cname = $hostname;
+        }
     }
-    echo 'CHECKDNSRR';
-    $ip = $_SERVER['REMOTE_ADDR'];
-    $hostname = gethostbyaddr($ip);
-    if (checkdnsrr($hostname, 'A')) {
-        echo 'Hostname: ' . $hostname . '<br>';
-    } else {
-        echo 'Hostname not found for IP: ' . $ip . '<br>';
-    }
+
     echo 'CName: ' . $cname . '<br>';
     echo 'Hostname: ' . $_SERVER['REMOTE_ADDR'] . '<br>';
     echo "HTTP_X_FORWARDED_FOR: " . $_SERVER['HTTP_X_FORWARDED_FOR'] . "<br>";
