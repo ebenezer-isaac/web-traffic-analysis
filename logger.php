@@ -97,7 +97,7 @@ try {
     // Get CName using DNS records
     $ip = $_SERVER['REMOTE_ADDR'];
     $records = dns_get_record($ip, DNS_PTR);
-    if ($records !== false) {
+    if ($records !== false && isset($records[0]['target'])) {
         $cname = $records[0]['target'];
     } else {
         // Get CName using gethostbyaddr
