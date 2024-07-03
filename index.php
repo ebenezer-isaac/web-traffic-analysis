@@ -3,7 +3,11 @@ $username = "u117204720_analytics";
 $password = "ex46Z>n?";
 $dbname = "u117204720_analytics";
 $page = "Analytics";
-$filter = "Crossroads Pune";
+if (isset($_GET['filter'])) {
+    $filter = $_GET['filter'];
+} else {
+    $filter = "";
+}
 $conn = new mysqli($servername, $username, $password, $dbname);
 $total = 0;
 $google = 0;
@@ -17,11 +21,17 @@ $passive_month = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
-$sql = "SELECT count(`user_count`) as total, 
-(select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%google%' AND `page` = '".$filter."') as google,
-(select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%amazon%' AND `page` = '".$filter."') as amazon, 
-(select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%msn%' AND `page` = '".$filter."') as bing 
-FROM `track_log` WHERE `page` = '".$filter."'";
+$sql = "";
+if ($filter == "") {
+    $sql = "SELECT count(`user_count`) as total, (select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%google%') as google,(select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%amazon%') as amazon, (select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%msn%') as bing FROM `track_log` WHERE 1";
+
+} else {
+    $sql = "SELECT count(`user_count`) as total, 
+(select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%google%' AND `page` = '" . $filter . "') as google,
+(select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%amazon%' AND `page` = '" . $filter . "') as amazon, 
+(select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%msn%' AND `page` = '" . $filter . "') as bing 
+FROM `track_log` WHERE `page` = '" . $filter . "'";
+}
 $result = $conn->query($sql);
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
@@ -34,30 +44,35 @@ if ($result->num_rows > 0) {
     }
 }
 for ($i = 1; $i <= 12; $i++) {
-    $sql = "SELECT count(`user_count`) as total, 
+    if ($filter == "") {
+        $sql = "SELECT count(`user_count`) as total, (select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%google%' and month(`date_time`) = " . $i . ")+(select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%amazon%' and month(`date_time`) = " . $i . ")  + (select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%msn%' and month(`date_time`) = " . $i . ") as passive FROM `track_log` where month(`date_time`)=" . $i;
+
+    } else {
+        $sql = "SELECT count(`user_count`) as total, 
     (
       select count(`user_count`) 
       FROM `track_log` 
       WHERE LOWER(`hostname`) LIKE '%google%' 
       and month(`date_time`) = " . $i . " 
-      and `page` = '".$filter."'
+      and `page` = '" . $filter . "'
     ) + 
     (
       select count(`user_count`) 
       FROM `track_log` 
       WHERE LOWER(`hostname`) LIKE '%amazon%' 
       and month(`date_time`) = " . $i . " 
-      and `page` = '".$filter."'
+      and `page` = '" . $filter . "'
     ) + 
     (
       select count(`user_count`) 
       FROM `track_log` 
       WHERE LOWER(`hostname`) LIKE '%msn%' 
       and month(`date_time`) = " . $i . " 
-      and `page` = '".$filter."'
+      and `page` = '" . $filter . "'
     ) as passive 
     FROM `track_log` 
-    where month(`date_time`)=" . $i . " and `page` = '".$filter."'";
+    where month(`date_time`)=" . $i . " and `page` = '" . $filter . "'";
+    }
     $result = $conn->query($sql);
     if ($result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
@@ -114,7 +129,11 @@ for ($i = 1; $i <= 12; $i++) {
                                 <span class="badge badge-pill badge-success">
                                     <font size="3">Most Recent Traffic </font>
                                 </span><span id="mostrecent"><?php
-                                $sql = "SELECT * FROM `track_log` WHERE `page` = '".$filter."' ORDER BY `user_count` DESC LIMIT 0,1";
+                                if ($filter == "") {
+                                    $sql = "SELECT * FROM `track_log` ORDER BY `user_count` DESC LIMIT 0,1";
+                                } else {
+                                    $sql = "SELECT * FROM `track_log` WHERE `page` = '" . $filter . "' ORDER BY `user_count` DESC LIMIT 0,1";
+                                }
                                 $result = $conn->query($sql);
                                 if ($result->num_rows > 0) {
                                     while ($row = $result->fetch_assoc()) {
@@ -292,7 +311,11 @@ for ($i = 1; $i <= 12; $i++) {
                                 <tbody>
                                     <?php
                                     $currentDate = date("Y-m-d");
-                                    $sql = "SELECT `date_time`, `page`, `hostname`, `ip`, `isp`, `city`, `region`, `country`, `zip`, `browser`, `os` FROM track_log WHERE DATE(`date_time`) = '$currentDate' AND `page` = '".$filter."';";
+                                    if ($filter == "") {
+                                        $sql = "SELECT `date_time`, `page`, `hostname`, `ip`, `isp`, `city`, `region`, `country`, `zip`, `browser`, `os` FROM track_log WHERE DATE(`date_time`) = '$currentDate';";
+                                    } else {
+                                        $sql = "SELECT `date_time`, `page`, `hostname`, `ip`, `isp`, `city`, `region`, `country`, `zip`, `browser`, `os` FROM track_log WHERE DATE(`date_time`) = '$currentDate' AND `page` = '" . $filter . "';";
+                                    }
                                     $result = $conn->query($sql);
                                     if ($result->num_rows > 0) {
                                         while ($row = $result->fetch_assoc()) {
@@ -319,7 +342,11 @@ for ($i = 1; $i <= 12; $i++) {
     <script src="js/Chart.bundle.min.js"></script>
     <script src="js/dashboard.js"></script>
     <script>var map_data = {}; var countries = []; var keys = []; <?php $count = 0;
-    $sql = "SELECT country, count(`user_count`) as count_user from `track_log` where LENGTH(country) > 1 AND `page` = '".$filter."' GROUP by `country` ORDER BY count_user DESC";
+    if ($filter == "") {
+        $sql = "SELECT country, count(`user_count`) as count_user from `track_log` where LENGTH(country) > 1 GROUP by `country` ORDER BY count_user DESC";
+    } else {
+        $sql = "SELECT country, count(`user_count`) as count_user from `track_log` where LENGTH(country) > 1 AND `page` = '" . $filter . "' GROUP by `country` ORDER BY count_user DESC";
+    }
     $result = $conn->query($sql);
     if ($result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
