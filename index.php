@@ -3,7 +3,7 @@ $username = "u117204720_analytics";
 $password = "ex46Z>n?";
 $dbname = "u117204720_analytics";
 $page = "Analytics";
-include "logger.php";
+$filter = "Crossroads Pune";
 $conn = new mysqli($servername, $username, $password, $dbname);
 $total = 0;
 $google = 0;
@@ -17,7 +17,11 @@ $passive_month = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
-$sql = "SELECT count(`user_count`) as total, (select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%google%') as google,(select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%amazon%') as amazon, (select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%msn%') as bing FROM `track_log` WHERE 1";
+$sql = "SELECT count(`user_count`) as total, 
+(select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%google%' AND `page` = '".$filter."') as google,
+(select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%amazon%' AND `page` = '".$filter."') as amazon, 
+(select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%msn%' AND `page` = '".$filter."') as bing 
+FROM `track_log` WHERE `page` = '".$filter."'";
 $result = $conn->query($sql);
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
@@ -30,7 +34,30 @@ if ($result->num_rows > 0) {
     }
 }
 for ($i = 1; $i <= 12; $i++) {
-    $sql = "SELECT count(`user_count`) as total, (select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%google%' and month(`date_time`) = " . $i . ")+(select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%amazon%' and month(`date_time`) = " . $i . ")  + (select count(`user_count`) FROM `track_log` WHERE LOWER(`hostname`) LIKE '%msn%' and month(`date_time`) = " . $i . ") as passive FROM `track_log` where month(`date_time`)=" . $i;
+    $sql = "SELECT count(`user_count`) as total, 
+    (
+      select count(`user_count`) 
+      FROM `track_log` 
+      WHERE LOWER(`hostname`) LIKE '%google%' 
+      and month(`date_time`) = " . $i . " 
+      and `page` = '".$filter."'
+    ) + 
+    (
+      select count(`user_count`) 
+      FROM `track_log` 
+      WHERE LOWER(`hostname`) LIKE '%amazon%' 
+      and month(`date_time`) = " . $i . " 
+      and `page` = '".$filter."'
+    ) + 
+    (
+      select count(`user_count`) 
+      FROM `track_log` 
+      WHERE LOWER(`hostname`) LIKE '%msn%' 
+      and month(`date_time`) = " . $i . " 
+      and `page` = '".$filter."'
+    ) as passive 
+    FROM `track_log` 
+    where month(`date_time`)=" . $i . " and `page` = '".$filter."'";
     $result = $conn->query($sql);
     if ($result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
@@ -38,8 +65,13 @@ for ($i = 1; $i <= 12; $i++) {
             $passive_month[$i - 1] = $row["passive"];
             $active_month[$i - 1] = $total_month[$i - 1] - $passive_month[$i - 1];
         }
+    } else {
+        $total_month[$i - 1] = 0;
+        $passive_month[$i - 1] = 0;
+        $active_month[$i - 1] = 0;
     }
-} ?>
+}
+?>
 <html class="no-js" lang="en">
 
 <head>
@@ -81,7 +113,8 @@ for ($i = 1; $i <= 12; $i++) {
                             <div class="alert alert-dismissible alert-success fade show" align="center" role="alert">
                                 <span class="badge badge-pill badge-success">
                                     <font size="3">Most Recent Traffic </font>
-                                </span><span id="mostrecent"><?php $sql = "SELECT * FROM `track_log` ORDER BY `user_count` DESC LIMIT 0,1";
+                                </span><span id="mostrecent"><?php
+                                $sql = "SELECT * FROM `track_log` WHERE `page` = '".$filter."' ORDER BY `user_count` DESC LIMIT 0,1";
                                 $result = $conn->query($sql);
                                 if ($result->num_rows > 0) {
                                     while ($row = $result->fetch_assoc()) {
@@ -257,9 +290,9 @@ for ($i = 1; $i <= 12; $i++) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php 
+                                    <?php
                                     $currentDate = date("Y-m-d");
-                                    $sql = "SELECT `date_time`, `page`, `hostname`, `ip`, `isp`, `city`, `region`, `country`, `zip`, `browser`, `os` FROM track_log WHERE DATE(`date_time`) = '$currentDate';";
+                                    $sql = "SELECT `date_time`, `page`, `hostname`, `ip`, `isp`, `city`, `region`, `country`, `zip`, `browser`, `os` FROM track_log WHERE DATE(`date_time`) = '$currentDate' AND `page` = '".$filter."';";
                                     $result = $conn->query($sql);
                                     if ($result->num_rows > 0) {
                                         while ($row = $result->fetch_assoc()) {
@@ -286,16 +319,16 @@ for ($i = 1; $i <= 12; $i++) {
     <script src="js/Chart.bundle.min.js"></script>
     <script src="js/dashboard.js"></script>
     <script>var map_data = {}; var countries = []; var keys = []; <?php $count = 0;
-    $sql = "SELECT country, count(`user_count`) as cunt from `track_log` where LENGTH(country) >1 GROUP by `country` ORDER BY cunt DESC";
+    $sql = "SELECT country, count(`user_count`) as count_user from `track_log` where LENGTH(country) > 1 AND `page` = '".$filter."' GROUP by `country` ORDER BY count_user DESC";
     $result = $conn->query($sql);
     if ($result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
             $count = $count + 1;
             if ($count < 10) {
                 echo "keys.push('" . $row["country"] . "');";
-                echo "countries.push(" . round((($row["cunt"] / $total) * 100), 2) . ");";
+                echo "countries.push(" . round((($row["count_user"] / $total) * 100), 2) . ");";
             }
-            echo "map_data[id_mapper['" . $row["country"] . "']] = " . $row["cunt"] . ";";
+            echo "map_data[id_mapper['" . $row["country"] . "']] = " . $row["count_user"] . ";";
         }
     }
     $conn->close();
@@ -307,13 +340,16 @@ for ($i = 1; $i <= 12; $i++) {
         }
         $text = $text . $data[count($data) - 1] . "]";
         return $text;
-    } ?> 
-    console.log(map_data);var active_month = <?php echo print_data($active_month); ?>;
-    var passive_month = <?php echo print_data($passive_month); ?>;
-    var total_month = <?php echo print_data($total_month); ?>;
-    var google = <?php echo round(($google / $total) * 100, 2); ?>;
-    var amazon = <?php echo round(($amazon / $total) * 100, 2); ?>;
-    var bing = <?php echo round(($bing / $total) * 100, 2); ?>;var active = <?php echo round(($active / $total) * 100, 2);
-            
-            ?>
-                                       ;function set_data(){try{jQuery("#vmap").vectorMap({map:"world_en",backgroundColor:null,color:"#ffffff",hoverOpacity:.7,selectedColor:"#1de9b6",enableZoom:!0,showTooltip:!0,values:map_data,scaleColors:["#1de9b6","#03a9f5"],normalizeFunction:"polynomial"})}catch(e){}try{(e=document.getElementById("sales-chart")).height=150;new Chart(e,{type:"line",data:{labels:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],type:"line",defaultFontFamily:"Montserrat",datasets:[{label:"Active",data:active_month,backgroundColor:"transparent",borderColor:"rgba(220,53,69,0.75)",borderWidth:3,pointStyle:"circle",pointRadius:5,pointBorderColor:"transparent",pointBackgroundColor:"rgba(220,53,69,0.75)"},{label:"Passive",data:passive_month,backgroundColor:"transparent",borderColor:"rgba(40,167,69,0.75)",borderWidth:3,pointStyle:"circle",pointRadius:5,pointBorderColor:"transparent",pointBackgroundColor:"rgba(40,167,69,0.75)"}]},options:{responsive:!0,tooltips:{mode:"index",titleFontSize:12,titleFontColor:"#000",bodyFontColor:"#000",backgroundColor:"#fff",titleFontFamily:"Montserrat",bodyFontFamily:"Montserrat",cornerRadius:3,intersect:!1},legend:{display:!1,labels:{usePointStyle:!0,fontFamily:"Montserrat"}},scales:{xAxes:[{display:!0,gridLines:{display:!1,drawBorder:!1},scaleLabel:{display:!1,labelString:"Month"}}],yAxes:[{display:!0,gridLines:{display:!1,drawBorder:!1},scaleLabel:{display:!0,labelString:"Page Requests"}}]},title:{display:!1,text:"Normal Legend"}}})}catch(e){}try{(e=document.getElementById("team-chart")).height=150;new Chart(e,{type:"line",data:{labels:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],type:"line",defaultFontFamily:"Montserrat",datasets:[{data:total_month,label:"Traffic Requests ",backgroundColor:"rgba(0,103,255,.15)",borderColor:"rgba(0,103,255,0.5)",borderWidth:3.5,pointStyle:"circle",pointRadius:5,pointBorderColor:"transparent",pointBackgroundColor:"rgba(0,103,255,0.5)"}]},options:{responsive:!0,tooltips:{mode:"index",titleFontSize:12,titleFontColor:"#000",bodyFontColor:"#000",backgroundColor:"#fff",titleFontFamily:"Montserrat",bodyFontFamily:"Montserrat",cornerRadius:3,intersect:!1},legend:{display:!1,position:"top",labels:{usePointStyle:!0,fontFamily:"Montserrat"}},scales:{xAxes:[{display:!0,gridLines:{display:!1,drawBorder:!1},scaleLabel:{display:!1,labelString:"Month"}}],yAxes:[{display:!0,gridLines:{display:!1,drawBorder:!1},scaleLabel:{display:!0,labelString:"Page Requests"}}]},title:{display:!1}}})}catch(e){}try{(e=document.getElementById("singelBarChart")).height=150;new Chart(e,{type:"bar",data:{labels:keys,datasets:[{label:"Page Requests",data:countries,borderColor:"rgba(0, 123, 255, 0.9)",borderWidth:"0",backgroundColor:"rgba(0, 123, 255, 0.5)"}]},options:{scales:{yAxes:[{ticks:{beginAtZero:!0}}]}}})}catch(e){}try{var e;(e=document.getElementById("pieChart")).height=150;new Chart(e,{type:"pie",data:{datasets:[{data:[google,amazon,bing,active],backgroundColor:["#E04E5C","#FFCA2C","#48B461","#268FFF"],hoverBackgroundColor:["#E04E5C","#FFCA2C","#48B461","#268FFF"]}],labels:["Google","Amazon","Bing","Users"]},options:{responsive:!0}})}catch(e){}}jQuery(document).ready(function(e){set_data(),e("#bootstrap-data-table").DataTable()});</script></body></html>
+    } ?>
+        console.log(map_data); var active_month = <?php echo print_data($active_month); ?>;
+        var passive_month = <?php echo print_data($passive_month); ?>;
+        var total_month = <?php echo print_data($total_month); ?>;
+        var google = <?php echo round(($google / $total) * 100, 2); ?>;
+        var amazon = <?php echo round(($amazon / $total) * 100, 2); ?>;
+        var bing = <?php echo round(($bing / $total) * 100, 2); ?>; var active = <?php echo round(($active / $total) * 100, 2);
+
+                ?>
+            ; function set_data() { try { jQuery("#vmap").vectorMap({ map: "world_en", backgroundColor: null, color: "#ffffff", hoverOpacity: .7, selectedColor: "#1de9b6", enableZoom: !0, showTooltip: !0, values: map_data, scaleColors: ["#1de9b6", "#03a9f5"], normalizeFunction: "polynomial" }) } catch (e) { } try { (e = document.getElementById("sales-chart")).height = 150; new Chart(e, { type: "line", data: { labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], type: "line", defaultFontFamily: "Montserrat", datasets: [{ label: "Active", data: active_month, backgroundColor: "transparent", borderColor: "rgba(220,53,69,0.75)", borderWidth: 3, pointStyle: "circle", pointRadius: 5, pointBorderColor: "transparent", pointBackgroundColor: "rgba(220,53,69,0.75)" }, { label: "Passive", data: passive_month, backgroundColor: "transparent", borderColor: "rgba(40,167,69,0.75)", borderWidth: 3, pointStyle: "circle", pointRadius: 5, pointBorderColor: "transparent", pointBackgroundColor: "rgba(40,167,69,0.75)" }] }, options: { responsive: !0, tooltips: { mode: "index", titleFontSize: 12, titleFontColor: "#000", bodyFontColor: "#000", backgroundColor: "#fff", titleFontFamily: "Montserrat", bodyFontFamily: "Montserrat", cornerRadius: 3, intersect: !1 }, legend: { display: !1, labels: { usePointStyle: !0, fontFamily: "Montserrat" } }, scales: { xAxes: [{ display: !0, gridLines: { display: !1, drawBorder: !1 }, scaleLabel: { display: !1, labelString: "Month" } }], yAxes: [{ display: !0, gridLines: { display: !1, drawBorder: !1 }, scaleLabel: { display: !0, labelString: "Page Requests" } }] }, title: { display: !1, text: "Normal Legend" } } }) } catch (e) { } try { (e = document.getElementById("team-chart")).height = 150; new Chart(e, { type: "line", data: { labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], type: "line", defaultFontFamily: "Montserrat", datasets: [{ data: total_month, label: "Traffic Requests ", backgroundColor: "rgba(0,103,255,.15)", borderColor: "rgba(0,103,255,0.5)", borderWidth: 3.5, pointStyle: "circle", pointRadius: 5, pointBorderColor: "transparent", pointBackgroundColor: "rgba(0,103,255,0.5)" }] }, options: { responsive: !0, tooltips: { mode: "index", titleFontSize: 12, titleFontColor: "#000", bodyFontColor: "#000", backgroundColor: "#fff", titleFontFamily: "Montserrat", bodyFontFamily: "Montserrat", cornerRadius: 3, intersect: !1 }, legend: { display: !1, position: "top", labels: { usePointStyle: !0, fontFamily: "Montserrat" } }, scales: { xAxes: [{ display: !0, gridLines: { display: !1, drawBorder: !1 }, scaleLabel: { display: !1, labelString: "Month" } }], yAxes: [{ display: !0, gridLines: { display: !1, drawBorder: !1 }, scaleLabel: { display: !0, labelString: "Page Requests" } }] }, title: { display: !1 } } }) } catch (e) { } try { (e = document.getElementById("singelBarChart")).height = 150; new Chart(e, { type: "bar", data: { labels: keys, datasets: [{ label: "Page Requests", data: countries, borderColor: "rgba(0, 123, 255, 0.9)", borderWidth: "0", backgroundColor: "rgba(0, 123, 255, 0.5)" }] }, options: { scales: { yAxes: [{ ticks: { beginAtZero: !0 } }] } } }) } catch (e) { } try { var e; (e = document.getElementById("pieChart")).height = 150; new Chart(e, { type: "pie", data: { datasets: [{ data: [google, amazon, bing, active], backgroundColor: ["#E04E5C", "#FFCA2C", "#48B461", "#268FFF"], hoverBackgroundColor: ["#E04E5C", "#FFCA2C", "#48B461", "#268FFF"] }], labels: ["Google", "Amazon", "Bing", "Users"] }, options: { responsive: !0 } }) } catch (e) { } } jQuery(document).ready(function (e) { set_data(), e("#bootstrap-data-table").DataTable() });</script>
+</body>
+
+</html>
